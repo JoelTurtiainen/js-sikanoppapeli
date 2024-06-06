@@ -118,7 +118,7 @@ async function onRoll() {
 		diceElement.removeEventListener('animationend', onShakeEnd);
 		diceElement.classList.remove('transparent');
 		const thrown = throwDice(game.dicecount);
-		thrown > 0 ? (game.acc += thrown) : nextTurn();
+		thrown > 0 ? (game.acc += thrown) : ((game.acc = 0), nextTurn());
 		console.log(game.acc);
 	}
 }
