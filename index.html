@@ -12,15 +12,26 @@
 	<body>
 		<div class="grid">
 			<div class="left-side">
-				<div class="player-list center no-style"></div>
+				<div class="player-list center no-style"><ul></ul></div>
 			</div>
 			<div class="middle center">
 				<h1>'Sika' with dice</h1>
-				<div class="dice center"></div>
-				<div class="btn-container center"></div>
+				<h2>How many dice to play with</h2>
+				<div id="dice" class="center float-container small"></div>
+				<div class="btn-container center">
+					<div id="dice-select">
+						<input type="text" /><button id="player-add">Add Player</button>
+					</div>
+					<button id="start">Start Game</button>
+				</div>
+				<div class="slidein">
+					<h1></h1>
+				</div>
 			</div>
 			<div class="right-side">
-				<ul class="score-queue no-style"></ul>
+				<ul class="score-queue no-style">
+					<li>sum</li>
+				</ul>
 			</div>
 		</div>
 		<script src="./script.js"></script>

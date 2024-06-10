@@ -1,21 +1,191 @@
-const game = {
-	dicecount: 0,
-	turn: -1,
-	towin: 100,
-	acc: 0,
-	doubles: 0,
-};
-
-const players = [];
-
-function createButton(text, classes) {
-	const button = document.createElement('button');
-	button.textContent = text;
-	button.className = classes;
-	return button;
+class Player {
+	constructor(name) {
+		this.name = name;
+		this.score = 0;
+	}
 }
 
-function drawDie(number, classes) {
+class Game {
+	constructor() {
+		this.turn = -1;
+		this.diceCount = 0;
+		this.doubles = 0;
+		this.toWin = 10;
+		this.acc = 0;
+		this.players = [];
+	}
+
+	processRollEnd(points) {
+		this.acc += points;
+
+		if (points === 0 || this.doubles >= 3) {
+			this.acc = 0;
+			this.nextTurn();
+		} else if (this.acc + this.players[this.turn].score >= this.toWin) {
+			console.log('Game over');
+		}
+
+		console.log(`points: ${points}`);
+		console.log(`acc: ${this.acc} doubles: ${this.doubles}`);
+		console.log('');
+	}
+
+	updateDiceCount(count) {
+		this.diceCount = count;
+	}
+
+	addPlayer(name) {
+		this.players.push(new Player(name));
+
+		// Update player list
+		const playerData = this.getPlayerData();
+		view.displayPlayerList(playerData);
+	}
+
+	nextTurn() {
+		this.doubles = 0;
+
+		// True if player holded
+		if (this.acc > 0) {
+			this.players[this.turn].score += this.acc;
+			this.acc = 0;
+		}
+
+		// Get next player
+		if (this.turn >= this.players.length - 1) {
+			this.turn = 0;
+		} else {
+			this.turn++;
+		}
+
+		// Update player list
+		view.displayCurrentPlayer(this.players[this.turn].name);
+		const playerData = this.getPlayerData();
+
+		//Update current player text
+		view.displayPlayerList(playerData);
+	}
+
+	getPlayerData() {
+		return this.players.map((player) => ({ name: player.name, score: player.score }));
+	}
+}
+
+class GameView {
+	constructor() {
+		this.diceContainer = document.querySelector('#dice');
+		this.btns = document.querySelector('.btn-container');
+	}
+
+	startGame() {
+		this.diceContainer.classList.remove('small');
+		this.diceContainer.textContent = '';
+		this.diceToDom(randomNumber(game.diceCount), this.diceContainer);
+		this.btns.innerHTML = `<button id="roll">Roll The Dice</button><button id="hold">Hold</button>`;
+		game.nextTurn();
+	}
+
+	onRoll(timer = 1000) {
+		this.btns.classList.add('hidden');
+		this.diceContainer.childNodes.forEach((i) => i.classList.add('shake'));
+
+		setTimeout(() => {
+			const thrown = randomNumber(game.diceCount);
+			const points = calcScore(thrown);
+
+			this.btns.classList.remove('hidden');
+			this.diceContainer.textContent = '';
+			this.diceContainer.classList.remove('transparent');
+			const queue = document.querySelector('.score-queue');
+			queue.innerHTML = `<li>${points}<li>` + queue.innerHTML;
+
+			game.processRollEnd(points);
+			this.diceToDom(thrown, this.diceContainer);
+		}, timer);
+	}
+
+	diceToDom(list, parent, classes = 'die') {
+		list.map((i) => parent.appendChild(createDieGrid(i, classes)));
+	}
+
+	addPlayerFromInput() {
+		const input = document.querySelector('input');
+		if (input.value.trim() !== '') {
+			game.addPlayer(input.value);
+			input.value = '';
+		}
+	}
+
+	displayCurrentPlayer(name) {
+		const slideIn = document.querySelector('.slidein');
+
+		// Replace whole node so animation resets
+		slideIn.outerHTML = `<div class="slidein"><h1>${name}<h1></div>`;
+
+		// Empty Score Queue
+		document.querySelector('.score-queue').textContent = '';
+
+		this.diceContainer.classList.add('transparent');
+	}
+
+	displayPlayerList(playerData) {
+		const playerList = document.querySelector('.player-list > ul');
+
+		playerList.innerHTML = '';
+
+		playerData.map((i) => {
+			console.log(i.name, i.score);
+			playerList.innerHTML += `<li>${i.name} ${i.score}</li>`;
+		});
+	}
+
+	onClickDie(e) {
+		if (game.turn === -1) {
+			const siblings = e.target.parentElement.childNodes;
+			if (e.target.classList.contains('die')) {
+				siblings.forEach((i) => i.classList.remove('active'));
+				e.target.classList.add('active');
+
+				game.updateDiceCount(1 + Array.prototype.indexOf.call(siblings, e.target));
+			}
+		}
+	}
+
+	startScreen() {
+		//TODO: option to remove player
+
+		// 'Buttons' to select dicecount
+		const floatContainer = document.querySelector('.float-container');
+		this.diceToDom([1, 2], floatContainer, 'die float-child');
+	}
+}
+
+function onClick(e) {
+	const classes = e.target.id;
+	switch (classes) {
+		case 'roll':
+			view.onRoll();
+			break;
+
+		case 'hold':
+			game.nextTurn();
+			break;
+
+		case 'start':
+			if (game.players.length >= 2 && game.diceCount) view.startGame();
+			break;
+
+		case 'player-add':
+			view.addPlayerFromInput();
+			break;
+	}
+}
+
+function randomNumber(amount) {
+	return Array.from({ length: amount }, () => Math.floor(Math.random() * 6) + 1);
+}
+
+function createDieGrid(number, classes) {
 	const matrix = {
 		0: [],
 		1: [4],
@@ -30,222 +200,51 @@ function drawDie(number, classes) {
 	die.className = classes;
 
 	for (let i = 0; i < 9; i++) {
-		const div = document.createElement('div');
+		const icon = document.createElement('i');
 		if (matrix[number].includes(i)) {
-			div.className = 'circle';
+			icon.className = 'circle';
 		}
-		die.appendChild(div);
+		die.appendChild(icon);
 	}
 	return die;
 }
 
-function randomNumber() {
-	return Math.floor(Math.random() * 6) + 1;
-}
-
 function calcScore(dice) {
-	if (dice[0] + dice[1] === 2) {
-		// Both dice are 1
+	const [die1, die2] = dice;
+
+	if (die1 === 1 && die2 === 1) {
 		return 25;
-	} else if (dice.includes(1)) {
-		// One die is 1
+	}
+
+	if (die1 === 1 || die2 === 1) {
 		return 0;
-	} else if (dice[0] === dice[1]) {
-		// Both are same
-		game.doubles++; // UGLY
-		return (dice[0] + dice[1]) * 2;
-	} else if (dice.length >= 2) {
-		// Dice are different
-		return dice[0] + dice[1];
-	} else {
-		// When playing with 1 die
-		return dice[0];
+	}
+
+	if (die1 === die2) {
+		game.doubles++;
+		return die1 * 4;
+	}
+
+	if (dice.length === 2) {
+		return die1 + die2;
+	}
+
+	return die1;
+}
+
+function init(debug = false) {
+	view.startScreen();
+	addEventListener('click', onClick);
+	document.querySelector('.float-container').addEventListener('click', view.onClickDie);
+
+	if (debug) {
+		game.diceCount = 2;
+		game.addPlayer('First');
+		game.addPlayer('Second');
 	}
 }
 
-function nextTurn() {
-	const diceElement = document.querySelector('.dice');
-	diceElement.classList.add('transparent');
-	document.querySelector('.score-queue').textContent = '';
-	game.doubles = 0;
+const view = new GameView();
+const game = new Game();
 
-	if (game.acc > 0) {
-		players[game.turn].score += game.acc;
-		game.acc = 0;
-		listPlayers();
-	}
-
-	if (game.turn >= players.length - 1) {
-		game.turn = 0;
-	} else {
-		game.turn++;
-	}
-	displayPlayer(players[game.turn].name);
-}
-
-function diceToDom(list, parent, classes = 'die') {
-	list.forEach((i) => parent.appendChild(drawDie(i, classes)));
-}
-
-function toggleButtonVisibility() {
-	const buttons = document.querySelector('.btn-container');
-	buttons.classList.toggle('hidden');
-}
-
-function onRoll() {
-	const diceElement = document.querySelector('.dice');
-	// 1. Add .shake to dice which starts the animation & hide buttons for duration
-	// 2. Add listener and continue after animation is ended
-	toggleButtonVisibility();
-	diceElement.childNodes.forEach((i) => i.classList.add('shake'));
-	diceElement.addEventListener('animationend', onShakeEnd);
-}
-
-function insertPointsToQueue(points) {
-	const queue = document.querySelector('.score-queue');
-	const li = document.createElement('li');
-	li.appendChild(document.createTextNode(points));
-	queue.appendChild(li);
-}
-
-function onShakeEnd() {
-	// 1. Remove listener, Transparent, textContent
-	// 2. Add .roll back to the button
-	toggleButtonVisibility();
-	const diceElement = document.querySelector('.dice');
-
-	diceElement.removeEventListener('animationend', onShakeEnd);
-	diceElement.textContent = '';
-	diceElement.classList.remove('transparent');
-
-	const thrown = [];
-	for (let i = 0; i < game.dicecount; i++) {
-		thrown.push(randomNumber());
-	}
-	const points = calcScore(thrown);
-	insertPointsToQueue(points);
-	diceToDom(thrown, diceElement);
-	if (points > 0 && game.doubles <= 3) {
-		game.acc += points;
-	} else {
-		game.acc = 0;
-		nextTurn();
-	}
-	console.log(`points: ${points} for throw ${thrown}`);
-	console.log(`acc: ${game.acc} doubles: ${game.doubles}`);
-}
-
-function onClick(e) {
-	const cName = e.target.className;
-	if (cName === 'roll') {
-		onRoll();
-	} else if (cName === 'hold') {
-		nextTurn();
-	} else if (cName === 'start' && players.length >= 2 && game.dicecount > 0) {
-		onGameStart();
-	} else if (cName === 'player-add') {
-		onPlayerAdd();
-	}
-}
-
-//TODO:
-function onPlayerAdd() {
-	// 1. Get input field value
-	// 2. Add player to the players object, key: name, value: score
-	const inputBox = document.querySelector('input');
-	if (inputBox.value) {
-		players.push({ name: inputBox.value, score: 0 });
-		inputBox.value = '';
-	}
-	listPlayers();
-}
-
-function displayPlayer(name) {
-	const parent = document.querySelector('.middle');
-	const h1 = document.createElement('h1');
-	const div = document.createElement('div');
-
-	// Remove previous players name if it exists.
-	if (document.querySelector('.slidein')) {
-		document.querySelector('.slidein').remove();
-	}
-	h1.textContent = name;
-	div.className = 'slidein';
-	div.append(h1);
-	parent.append(div);
-}
-
-function listPlayers() {
-	const parent = document.querySelector('.player-list');
-	const ul = document.createElement('ul');
-	parent.innerHTML = '';
-
-	for (let p of players) {
-		const li = document.createElement('li');
-		const text = document.createTextNode(`${p.name}: ${p.score}`);
-		li.appendChild(text);
-		ul.appendChild(li);
-	}
-	parent.appendChild(ul);
-}
-
-function onGameStart() {
-	// 1. List Players
-	// 2. Clear btn-container
-	// 3. Roll dice but don't count it yet
-	// 4. Create a button for rolling and add it to DOM
-	// 5. Start the turn from the first player
-	// TODO: Randomize player order
-	const diceElement = document.querySelector('.dice');
-	const btns = document.querySelector('.btn-container');
-
-	listPlayers();
-	btns.innerHTML = '';
-	if (game.dicecount > 1) {
-		diceToDom([0, 0], diceElement);
-	} else {
-		diceToDom([0], diceElement);
-	}
-	btns.appendChild(createButton('Roll The Dice', 'roll'));
-	btns.appendChild(createButton('Hold', 'hold'));
-	nextTurn();
-}
-
-function selectDiceAmount(e) {
-	const siblings = e.currentTarget.parentElement.childNodes;
-
-	siblings.forEach((i) => i.classList.remove('active'));
-
-	e.currentTarget.classList.add('active');
-
-	game.dicecount = 1 + Array.prototype.indexOf.call(siblings, e.currentTarget);
-}
-
-function startScreen() {
-	// Show the start screen
-	const inputBox = document.createElement('input');
-	const btns = document.querySelector('.btn-container');
-	const parentDiv = document.createElement('div');
-	const h2 = document.createElement('h2');
-	let ChildDiv;
-
-	ChildDiv = document.createElement('div');
-	h2.textContent = 'How many dice to play with';
-	ChildDiv.className = 'float-container';
-	ChildDiv.style.scale = 0.6;
-	parentDiv.appendChild(h2);
-	diceToDom([1, 2], ChildDiv, 'die float-child');
-	ChildDiv.childNodes.forEach((i) => i.addEventListener('click', selectDiceAmount));
-	parentDiv.appendChild(ChildDiv);
-	btns.appendChild(parentDiv);
-
-	inputBox.type = 'text';
-	parentDiv.appendChild(inputBox);
-	parentDiv.appendChild(createButton('Add Player', 'player-add'));
-	btns.appendChild(parentDiv);
-
-	btns.appendChild(createButton('Start Game', 'start'));
-}
-
-startScreen();
-addEventListener('click', onClick);
+init(true);
