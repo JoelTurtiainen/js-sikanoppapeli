@@ -1,56 +1,100 @@
-* {
+*,
+*::before,
+*::after {
+	margin: 0;
+	padding: 0;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	font-family: 'Exo', sans-serif;
+}
+
+/* ## General */
+
+h1 {
+	font-size: 2.5em;
+}
+
+span {
+	pointer-events: none;
+}
+
+body {
+	font-family: 'JetBrains Mono', monospace;
 	font-optical-sizing: auto;
 	font-style: normal;
+	color: #333;
+	background-color: #f5f5f5;
 }
 
 .center {
 	max-width: fit-content;
-	margin-left: auto;
-	margin-right: auto;
+	margin: 0 auto;
 	text-align: center;
 }
 
-.grid {
-	display: grid;
-	grid-template-columns: 1fr max-content 1fr;
+.right-side,
+.score-queue,
+.slidein,
+.shake {
+	position: relative;
 }
+
+.no-style ul,
+.no-style li {
+	padding: 0;
+	list-style: none;
+	text-align: center;
+}
+
+/* ## Visibility */
 
 .hidden {
 	visibility: hidden;
 }
-
-.btn-container {
-	margin-top: 10%;
-}
-button {
-	margin: 5px;
-}
-.player-list {
-	float: left;
-}
-.no-style ul,
-.no-style li {
-	padding: 0;
-	list-style-type: none;
-	text-align: center;
+.none {
+	display: none;
+	visibility: hidden;
 }
 
-.right-side {
-	position: relative;
+.transparent {
+	opacity: 0.2;
+}
+
+.active {
+	padding: auto;
+	scale: 1.1;
+	outline: 5px solid orange;
+}
+
+/* ## Styling */
+#options {
+	border: 3px solid #fff;
+	border-radius: 10px;
+	padding: 30px;
+}
+
+input[type='number'] {
+	width: 50px;
 }
 
 .score-queue {
+	height: 20px;
 	padding-left: 10px;
-	position: absolute;
+	text-align: start;
 	bottom: 20%;
 }
+
+.player-list {
+	margin: 0;
+	margin-top: 30px;
+}
+
+/* ## Dice */
 
 .die {
 	display: grid;
 	width: fit-content;
-	grid-template-columns: 1fr 1fr 1fr;
+	grid-template-columns: repeat(3, 1fr);
 	gap: 10px;
 	background-color: whitesmoke;
 	border-radius: 15%;
@@ -65,53 +109,59 @@ button {
 	width: 50px;
 }
 
-.circle {
+.die-dot {
 	box-shadow: inset -10px -10px 10px black;
 	background-color: #555;
 	border-radius: 50%;
 }
 
-.transparent {
-	opacity: 0.2;
+.grid {
+	display: grid;
+	grid-template-columns: 1fr max-content 1fr;
 }
 
-.small {
-	scale: 0.6;
+#dice-select {
+	scale: 0.5;
 }
 
 .float-container {
 	display: flex;
-	border: 3px solid #fff;
+	max-width: initial;
 }
 
 .float-child {
-	margin: 20px;
-	width: 50%;
 	float: left;
-	padding: 20px;
+	width: 50%;
+	margin-top: 20px;
+	margin-bottom: 20px;
 }
 
-.active {
-	scale: 1.1;
-	border: 5px solid cornflowerblue;
+#splash {
+	z-index: 1;
+	height: 0;
+	padding: 0;
+	margin: 0;
+	top: 15%;
+	text-align: center;
+	color: #fff;
+	-webkit-text-stroke: 1px black;
 }
 
-/*  ┏┓  •      •     
-    ┣┫┏┓┓┏┳┓┏┓╋┓┏┓┏┓┏
-    ┛┗┛┗┗┛┗┗┗┻┗┗┗┛┛┗┛  */
+/* ## Animations */
 
 .slidein {
-	position: relative;
 	animation: slidein 0.4s;
 }
 
 .shake {
-	position: relative;
-	animation: shake 0.4s;
-	animation-direction: alternate;
-	animation-iteration-count: 3;
+	animation: shake 0.4s alternate 3;
 }
-#dice div:nth-child(even) {
+
+.anim-splash {
+	animation: anim-splash 0.5s alternate 4;
+}
+
+#dice-container div:nth-child(even) {
 	animation-direction: alternate-reverse;
 }
 
@@ -123,6 +173,23 @@ button {
 	to {
 		left: 0;
 		opacity: 1;
+	}
+}
+
+@keyframes anim-splash {
+	0% {
+		scale: 2;
+		rotate: 0;
+	}
+	33% {
+		rotate: 5deg;
+		filter: blur(1px);
+	}
+	66% {
+		rotate: -5deg;
+	}
+	100% {
+		rotate: 0;
 	}
 }
 
@@ -144,4 +211,46 @@ button {
 		rotate: 0;
 		left: 0px;
 	}
+}
+/* Algolia from here https://getcssscan.com/css-buttons-examples */
+.btn {
+	align-items: center;
+	appearance: none;
+	background-color: #fcfcfd;
+	border-radius: 4px;
+	border-width: 0;
+	box-shadow: rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
+		#d6d6e7 0 -3px 0 inset;
+	color: #36395a;
+	cursor: pointer;
+	display: inline-flex;
+	height: 32px;
+	justify-content: center;
+	padding-left: 16px;
+	padding-right: 16px;
+	position: relative;
+	text-align: left;
+	transition: box-shadow 0.15s, transform 0.15s;
+	user-select: none;
+	-webkit-user-select: none;
+	touch-action: manipulation;
+	white-space: nowrap;
+	will-change: box-shadow, transform;
+	font-size: 18px;
+}
+
+.btn:focus {
+	box-shadow: #d6d6e7 0 0 0 1.5px inset, rgba(45, 35, 66, 0.4) 0 2px 4px,
+		rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #d6d6e7 0 -3px 0 inset;
+}
+
+.btn:hover {
+	box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
+		#d6d6e7 0 -3px 0 inset;
+	transform: translateY(-2px);
+}
+
+.btn:active {
+	box-shadow: #d6d6e7 0 3px 7px inset;
+	transform: translateY(2px);
 }

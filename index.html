@@ -5,35 +5,45 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Document</title>
 		<link rel="stylesheet" href="style.css" />
-		<style>
-			@import url('https://fonts.googleapis.com/css2?family=Exo:ital,wght@0,100..900;1,100..900&display=swap');
-		</style>
+		<style>@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');</style>
 	</head>
 	<body>
-		<div class="grid">
-			<div class="left-side">
-				<div class="player-list center no-style"><ul></ul></div>
-			</div>
-			<div class="middle center">
-				<h1>'Sika' with dice</h1>
-				<h2>How many dice to play with</h2>
-				<div id="dice" class="center float-container small"></div>
-				<div class="btn-container center">
-					<div id="dice-select">
-						<input type="text" /><button id="player-add">Add Player</button>
+		<main class="grid">
+			<section class="left-side">
+				<button id="back" class="btn hidden">&lt; Back To Menu</button>
+				<ul class="player-list center no-style"></ul>
+			</section>
+			<section class="middle center">
+					<h1><i>'Sika'</i> with dice</h1>
+				<div id="game-container" class="none">
+					<div class="score-queue"></div>
+					<div id="splash"></div>
+					<div id="dice-container" class="center float-container"></div>
+					<div class="slidein"></div>
+					<div id="game-buttons">
+						<button id="roll" class="btn">Roll The Dice</button>
+						<button id="hold" class="btn">Hold <span class='acc'></span></button>
 					</div>
-					<button id="start">Start Game</button>
 				</div>
-				<div class="slidein">
-					<h1></h1>
-				</div>
-			</div>
-			<div class="right-side">
-				<ul class="score-queue no-style">
-					<li>sum</li>
-				</ul>
-			</div>
-		</div>
+				<form id="options">
+					<div>
+						<h2>How many dice to play with?</h2>
+						<h2 id="splash"></h2>
+						<div id="dice-select" class="center float-container small"></div>
+					</div>
+					<div>
+						<input type="text" id="player-input"/>
+						<button type="submit" id="player-add" class="btn" />Add Player</button>
+					</div>
+					<div>
+						<label for="to-win"> To win</label>
+						<input type="number" id="to-win" name="to-win" placeholder="100" />
+						<button id="start-game" class="btn" />Start Game</button>
+					</div>
+				</form>
+			</section>
+			<section class="right-side"></section>
+		</main>
 		<script src="./script.js"></script>
 	</body>
 </html>
