@@ -6,14 +6,13 @@ class Player {
 }
 
 class Game {
-	constructor() {
-		this.running = false;
-		this.turn = -1;
-		this.diceCount = 0;
+	constructor(players, toWin, diceCount) {
+		this.players = players;
+		this.toWin = toWin;
+		this.diceCount = diceCount;
 		this.doubles = 0;
-		this.toWin = 100;
+		this.turn = -1;
 		this.acc = 0;
-		this.players = [];
 	}
 
 	processRollEnd(points) {
@@ -26,9 +25,6 @@ class Game {
 		if (points === 0 || this.doubles >= 3) {
 			this.acc = 0;
 			this.nextTurn();
-		} else if (this.acc + this.players[this.turn].score >= this.toWin) {
-			this.running = false;
-			view.gameOver(this.players[this.turn].name);
 		}
 	}
 
@@ -41,14 +37,6 @@ class Game {
 		this.diceCount = count;
 	}
 
-	addPlayer(name) {
-		this.players.push(new Player(name));
-
-		// Update player list
-		const playerData = this.getPlayerData();
-		view.displayPlayerList(playerData);
-	}
-
 	nextTurn() {
 		this.doubles = 0;
 
@@ -56,6 +44,9 @@ class Game {
 		if (this.acc > 0) {
 			this.players[this.turn].score += this.acc;
 			this.acc = 0;
+
+			// Winning condition
+			if (this.players[this.turn].score >= this.toWin) view.gameOver(this.players[this.turn].name);
 		}
 
 		// Get next player
@@ -66,6 +57,7 @@ class Game {
 		}
 
 		view.nextTurnDOM(this.players[this.turn].name, this.getPlayerData());
+		view.refreshPlayerList(this.getPlayerData());
 	}
 
 	getPlayerData() {
@@ -74,39 +66,58 @@ class Game {
 }
 
 class GameView {
-	constructor() {}
+	constructor() {
+		this.state = 'startScreen';
+	}
 
 	//## Game States
 
 	startScreen() {
-		const diceSelect = document.getElementById('dice-select');
-		// 'Buttons' to select dicecount
-		if (diceSelect.childNodes.length === 0) {
-			this.diceToDom([1, 2], diceSelect);
-		}
+		const diceButtons = document.getElementById('dice-select');
+		const diceCount = localStorage.getItem('diceCount');
+		const toWinThreshold = localStorage.getItem('toWin');
+		const toWinInput = document.getElementById('to-win');
+
+		if (diceButtons.childNodes.length === 0) this.diceToDom([1, 2], diceButtons, 'select');
+		if (diceCount) diceButtons.children[diceCount - 1].classList.add('active');
+		if (toWinThreshold) toWinInput.value = toWinThreshold;
+
+		this.state = 'startScreen';
+		this.refreshPlayerList();
 	}
 
 	startGame() {
-		this.toggleScreen();
+		const diceCount = localStorage.getItem('diceCount');
 		const dice = document.getElementById('dice-container');
-		this.diceToDom(randomNumber(game.diceCount), dice);
-		game.running = true;
+		const gameBtns = document.getElementById('game-buttons');
+		gameBtns.classList.remove('none');
+		dice.textContent = '';
+		this.diceToDom(randomNumber(diceCount), dice);
+		game = createNewGame();
 		game.nextTurn();
+		this.toggleScreen();
+
+		this.state = 'startGame';
+		this.refreshPlayerList();
 	}
 
 	gameOver(winner) {
+		this.state = 'gameOver';
 		this.splashText(`${winner} Won!`);
 		document.getElementById('game-buttons').classList.add('none');
 		setTimeout(() => {
 			//this.toggleScreen();
-			game = init();
+			game = createNewGame();
 		}, 5000);
+
+		this.state = 'gameOver';
+		this.refreshPlayerList();
 	}
 
 	nextTurnDOM(name, playerData) {
 		const dice = document.getElementById('dice-container');
 		const slideIn = document.querySelector('.slidein');
-		this.displayPlayerList(playerData);
+		this.refreshPlayerList(playerData);
 
 		// Replace whole node so animation resets
 		slideIn.innerHTML = `<div class="slidein"><h1>${name}<h1></div>`;
@@ -116,26 +127,28 @@ class GameView {
 		document.querySelector('.acc').textContent = '';
 
 		dice.classList.add('transparent');
+
+		this.state = 'nextTurnDOM';
 	}
 
 	//## Dom Manipulation
 
 	onRoll(timer = 1000) {
+		this.state = 'onRoll';
 		const btns = document.getElementById('game-buttons');
 		const dice = document.getElementById('dice-container');
 		dice.classList.remove('transparent');
 		btns.classList.add('hidden');
 		dice.childNodes.forEach((i) => i.classList.add('shake'));
 
-		// TODO: cancel timeout
 		setTimeout(() => {
 			const thrown = randomNumber(game.diceCount);
-			const points = calcScore(thrown);
+			const [points, type] = calcScore(thrown);
 
 			btns.classList.remove('hidden');
 
 			dice.textContent = '';
-			this.diceToDom(thrown, dice);
+			this.diceToDom(thrown, dice, type);
 			game.processRollEnd(points);
 			this.updateQueue(points);
 		}, timer);
@@ -161,8 +174,13 @@ class GameView {
 		document.getElementById('options').classList.toggle('none');
 	}
 
-	diceToDom(list, destination = document.getElementById('dice-container')) {
-		list.map((i) => destination.appendChild(createDieGrid(i)));
+	diceToDom(list, destination = document.getElementById('dice-container'), type = '') {
+		list.map((i) => {
+			let dieGrid = createDieGrid(i);
+			if (type === 'double1') dieGrid.classList.add('glow');
+			if (type === 'select') dieGrid.id = 'die-' + i;
+			destination.appendChild(dieGrid);
+		});
 	}
 
 	splashText(text, time = 2000) {
@@ -175,45 +193,101 @@ class GameView {
 		}, time);
 	}
 
-	displayPlayerList(playerData) {
+	refreshPlayerList() {
+		const playersFromStorage = getItemsFromStorage('players');
 		const playerList = document.querySelector('.player-list');
 		playerList.innerHTML = '';
 
-		playerData.map((i) => {
-			console.log(i.name, i.score);
-			playerList.innerHTML += `<li>${i.name} ${i.score}</li>`;
-		});
-	}
-
-	//## Input handlers
-
-	addPlayerFromInput(e) {
-		e.preventDefault();
-		const input = document.getElementById('player-input');
-		if (input.value.trim() !== '') {
-			game.addPlayer(input.value);
-			input.value = '';
+		if (this.state !== 'startScreen') {
+			const playerData = game.getPlayerData();
+			playerData.map((i) => (playerList.innerHTML += `<li>${i.name} ${i.score}`));
+		} else {
+			playersFromStorage.map((name) => (playerList.innerHTML += `<li>${name}</li>`));
 		}
 	}
+}
 
-	onClickDie(e) {
-		if (game.turn === -1) {
-			const siblings = e.target.parentElement.childNodes;
-			if (e.target.classList.contains('die')) {
-				siblings.forEach((i) => i.classList.remove('active'));
-				e.target.classList.add('active');
+//## Local Storage
 
-				game.updateDiceCount(1 + Array.prototype.indexOf.call(siblings, e.target));
-			}
-		}
+function addPlayerFromInput(e, key = 'players') {
+	e.preventDefault();
+	const input = document.getElementById('player-input');
+	// Sanitize
+	const newName = input.value.replace(/[^a-zA-Z ]/g, '');
+	if (checkIfItemExists('players', newName)) {
+		alert('That item already exists!');
+	} else if (newName.trim() !== '') {
+		addItemToStorage(key, newName);
+		view.refreshPlayerList();
+		input.value = '';
+	}
+}
+
+function removeItem(key, item) {
+	if (confirm('Are you sure?')) {
+		// Remove item from DOM
+		item.remove();
+
+		// Remove item from storage
+		removeItemFromStorage(key, item.textContent);
+
+		view.refreshPlayerList();
+	}
+}
+
+function checkIfItemExists(key, item) {
+	const itemsFromStorage = getItemsFromStorage(key);
+	return itemsFromStorage.includes(item);
+}
+
+function addItemToStorage(key, item) {
+	const ItemsFromStorage = getItemsFromStorage(key);
+
+	// Add new item to array
+	ItemsFromStorage.push(item);
+
+	// Convert to JSON string and set to local storage
+	localStorage.setItem(key, JSON.stringify(ItemsFromStorage));
+}
+
+function getItemsFromStorage(key) {
+	let ItemsFromStorage;
+
+	if (localStorage.getItem(key) === null) {
+		ItemsFromStorage = [];
+	} else {
+		ItemsFromStorage = JSON.parse(localStorage.getItem(key));
 	}
 
-	onInput(e) {
-		const target = e.target;
-		console.log(e.target.value);
-		if (target.id === 'to-win') {
-			game.toWin = target.value;
-		}
+	return ItemsFromStorage;
+}
+
+function removeItemFromStorage(key, item) {
+	let itemsFromStorage = getItemsFromStorage(key);
+
+	// Filter out item to be removed
+	itemsFromStorage = itemsFromStorage.filter((i) => i !== item);
+
+	// Re-set to localstorage
+	localStorage.setItem(key, JSON.stringify(itemsFromStorage));
+}
+
+function selectDiceCount(e) {
+	let selected;
+	e.target.parentElement.childNodes.forEach((i) => i.classList.remove('active'));
+	e.target.classList.add('active');
+	console.log(e.target.id);
+
+	if (e.target.id === 'die-1') selected = 1;
+	else selected = 2;
+
+	localStorage.setItem('diceCount', selected);
+}
+
+function onInput(e, key = 'toWin') {
+	const target = e.target;
+	if (target.id === 'to-win') {
+		localStorage.setItem(key, e.target.value);
 	}
 }
 
@@ -251,66 +325,74 @@ function calcScore(dice) {
 
 	if (die1 === 1 && die2 === 1) {
 		game.updateDoubles();
-		return 25;
+		return [25, 'double1'];
 	}
 
 	if (die1 === 1 || die2 === 1) {
-		return 0;
+		return [0, 'miss'];
 	}
 
 	if (die1 === die2) {
 		game.updateDoubles();
-		return die1 * 4;
+		return [die1 * 4, 'double'];
 	}
 
 	if (dice.length === 2) {
-		return die1 + die2;
+		return [die1 + die2, 'basic'];
 	}
 
-	return die1;
+	return [die1, ''];
 }
 
 function onClick(e) {
+	// So beautiful /s
 	const id = e.target.id;
-	switch (id) {
-		case 'roll':
-			view.onRoll();
-			break;
-
-		case 'hold':
-			game.nextTurn();
-			break;
-
-		case 'start-game':
-			if (game.players.length >= 2 && game.diceCount) view.startGame();
-			break;
-
-		case 'back':
-			if (confirm('Are you sure?')) {
-				view.toggleScreen();
-				game = init();
-				game.running = false;
-			}
+	if (id === 'roll') {
+		view.onRoll();
+	} else if (id === 'hold') {
+		game.nextTurn();
+	} else if (id === 'start-game') {
+		if (getItemsFromStorage('players').length >= 2 && localStorage.getItem('diceCount')) {
+			view.startGame();
+		}
+	} else if (id === 'back' && confirm('Are you sure?')) {
+		view.state = 'startScreen';
+		view.toggleScreen();
+		game = createNewGame();
+		view.startScreen();
+		view.refreshPlayerList();
+	} else if (e.target.parentElement.id === 'dice-select') {
+		selectDiceCount(e);
+	} else if (
+		e.target.parentElement.classList.contains('player-list') &&
+		view.state === 'startScreen'
+	) {
+		removeItem('players', e.target);
 	}
 }
 
-function init(debug = false) {
-	const game = new Game();
+function createNewGame() {
+	let shuffled = getItemsFromStorage('players')
+		.map((value) => ({ value, sort: Math.random() }))
+		.sort((a, b) => a.sort - b.sort)
+		.map(({ value }) => value);
+
+	const players = shuffled.map((i) => new Player(i));
+
+	const winThreshold = localStorage.getItem('toWin') || 100;
+
+	return new Game(players, winThreshold, localStorage.getItem('diceCount'));
+}
+
+function init() {
+	const view = new GameView();
 	const form = document.getElementById('options');
-	form.addEventListener('submit', view.addPlayerFromInput);
-	form.addEventListener('click', view.onClickDie);
-	form.addEventListener('input', view.onInput);
+	document.querySelector('main').addEventListener('click', onClick);
+	form.addEventListener('submit', addPlayerFromInput);
+	form.addEventListener('input', onInput);
 	view.startScreen();
-	addEventListener('click', onClick);
-
-	if (debug) {
-		game.toWin = 100;
-		game.diceCount = 2;
-		game.addPlayer('First');
-		game.addPlayer('Second');
-	}
-	return game;
+	return view;
 }
 
-const view = new GameView();
-let game = init();
+const view = init();
+let game;

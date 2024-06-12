@@ -11,7 +11,7 @@
 		<main class="grid">
 			<section class="left-side">
 				<button id="back" class="btn hidden">&lt; Back To Menu</button>
-				<ul class="player-list center no-style"></ul>
+				<ul class="player-list center"></ul>
 			</section>
 			<section class="middle center">
 					<h1><i>'Sika'</i> with dice</h1>
@@ -28,16 +28,17 @@
 				<form id="options">
 					<div>
 						<h2>How many dice to play with?</h2>
-						<h2 id="splash"></h2>
 						<div id="dice-select" class="center float-container small"></div>
 					</div>
-					<div>
+					<div class="grid-2">
+						<input type="number" min="0" id="to-win" name="to-win" placeholder="100" />
+						<label for="to-win"> To win</label>
+					</div>
+					<div class="grid-2">
 						<input type="text" id="player-input"/>
 						<button type="submit" id="player-add" class="btn" />Add Player</button>
 					</div>
-					<div>
-						<label for="to-win"> To win</label>
-						<input type="number" id="to-win" name="to-win" placeholder="100" />
+					<div class="center">
 						<button id="start-game" class="btn" />Start Game</button>
 					</div>
 				</form>

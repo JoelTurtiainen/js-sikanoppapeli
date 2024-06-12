@@ -39,13 +39,6 @@ body {
 	position: relative;
 }
 
-.no-style ul,
-.no-style li {
-	padding: 0;
-	list-style: none;
-	text-align: center;
-}
-
 /* ## Visibility */
 
 .hidden {
@@ -63,7 +56,30 @@ body {
 .active {
 	padding: auto;
 	scale: 1.1;
-	outline: 5px solid orange;
+	outline: 5px solid #ffa500;
+}
+
+/* ## Buttons */
+#back {
+	margin: 5px;
+}
+
+button {
+	background-color: #555;
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+	padding: 10px 20px;
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #666;
+}
+
+button:active {
+	box-shadow: #d6d6e7 0 3px 7px inset;
+	transform: translateY(2px);
 }
 
 /* ## Styling */
@@ -74,7 +90,7 @@ body {
 }
 
 input[type='number'] {
-	width: 50px;
+	width: 100px;
 }
 
 .score-queue {
@@ -85,8 +101,30 @@ input[type='number'] {
 }
 
 .player-list {
-	margin: 0;
-	margin-top: 30px;
+	margin: 50px 5px;
+}
+
+.player-list > li {
+	display: flex;
+	justify-content: space-between;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	padding: 10px 15px;
+	margin: 0 5px 10px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.player-list > li:hover {
+	border-color: red;
+	color: red;
+}
+
+.grid-2 {
+	margin-bottom: 10px;
+	display: grid;
+	height: 32px;
+	grid-template-columns: 1fr max-content;
 }
 
 /* ## Dice */
@@ -126,25 +164,23 @@ input[type='number'] {
 
 .float-container {
 	display: flex;
-	max-width: initial;
+	max-width: max-content;
 }
 
 .float-child {
 	float: left;
-	width: 50%;
+
 	margin-top: 20px;
 	margin-bottom: 20px;
 }
 
 #splash {
-	z-index: 1;
+	z-index: 2;
 	height: 0;
 	padding: 0;
-	margin: 0;
-	top: 15%;
 	text-align: center;
-	color: #fff;
-	-webkit-text-stroke: 1px black;
+	color: #ffa500;
+	-webkit-text-stroke: 1px rgb(192, 92, 4);
 }
 
 /* ## Animations */
@@ -158,11 +194,23 @@ input[type='number'] {
 }
 
 .anim-splash {
-	animation: anim-splash 0.5s alternate 4;
+	animation: anim-splash 0.5s alternate 6;
+}
+.glow {
+	animation: anim-glow 0.5s infinite alternate;
 }
 
 #dice-container div:nth-child(even) {
 	animation-direction: alternate-reverse;
+}
+
+@keyframes anim-glow {
+	from {
+		box-shadow: 0 0 10px 0px cyan;
+	}
+	to {
+		box-shadow: 0 0 10px 10px cyan;
+	}
 }
 
 @keyframes slidein {
@@ -212,45 +260,15 @@ input[type='number'] {
 		left: 0px;
 	}
 }
-/* Algolia from here https://getcssscan.com/css-buttons-examples */
-.btn {
-	align-items: center;
-	appearance: none;
-	background-color: #fcfcfd;
-	border-radius: 4px;
-	border-width: 0;
-	box-shadow: rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
-		#d6d6e7 0 -3px 0 inset;
-	color: #36395a;
-	cursor: pointer;
-	display: inline-flex;
-	height: 32px;
-	justify-content: center;
-	padding-left: 16px;
-	padding-right: 16px;
-	position: relative;
-	text-align: left;
-	transition: box-shadow 0.15s, transform 0.15s;
-	user-select: none;
-	-webkit-user-select: none;
-	touch-action: manipulation;
-	white-space: nowrap;
-	will-change: box-shadow, transform;
-	font-size: 18px;
-}
 
-.btn:focus {
-	box-shadow: #d6d6e7 0 0 0 1.5px inset, rgba(45, 35, 66, 0.4) 0 2px 4px,
-		rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #d6d6e7 0 -3px 0 inset;
-}
-
-.btn:hover {
-	box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
-		#d6d6e7 0 -3px 0 inset;
-	transform: translateY(-2px);
-}
-
-.btn:active {
-	box-shadow: #d6d6e7 0 3px 7px inset;
-	transform: translateY(2px);
+/* ## Responsive */
+@media (max-width: 500px) {
+	.player-list {
+		margin: 0;
+		display: flex;
+		flex-wrap: wrap;
+	}
+	.grid {
+		grid-template-columns: auto;
+	}
 }
