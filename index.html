@@ -3,47 +3,74 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Document</title>
+		<title>Sika</title>
 		<link rel="stylesheet" href="style.css" />
-		<style>@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');</style>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+		</style>
 	</head>
 	<body>
+		<nav>
+			<button id="back" class="btn hidden">&lt; Back To Menu</button>
+			<button id="showRules">Rules</button>
+		</nav>
 		<main class="grid">
-			<section class="left-side">
-				<button id="back" class="btn hidden">&lt; Back To Menu</button>
-				<ul class="player-list center"></ul>
+			<section id="leftSide" class="left">
+				<div id="toWinDisplay">To Win:</div>
+				<ul id="playerList"></ul>
 			</section>
 			<section class="middle center">
-					<h1><i>'Sika'</i> with dice</h1>
-				<div id="game-container" class="none">
-					<div class="score-queue"></div>
+				<h1><i>'Sika'</i> with dice</h1>
+				<div id="gameContainer" class="none">
+					<div id="scoreQueue"></div>
 					<div id="splash"></div>
-					<div id="dice-container" class="center float-container"></div>
+					<div id="diceContainer" class="center float-container"></div>
 					<div class="slidein"></div>
-					<div id="game-buttons">
+					<div id="gameButtons">
 						<button id="roll" class="btn">Roll The Dice</button>
-						<button id="hold" class="btn">Hold <span class='acc'></span></button>
+						<button id="hold" class="btn">Hold <span id="acc"></span></button>
 					</div>
 				</div>
 				<form id="options">
 					<div>
 						<h2>How many dice to play with?</h2>
-						<div id="dice-select" class="center float-container small"></div>
+						<div id="diceSelect" class="center float-container small"></div>
 					</div>
 					<div class="grid-2">
-						<input type="number" min="0" id="to-win" name="to-win" placeholder="100" />
-						<label for="to-win"> To win</label>
+						<input type="number" min="100" id="toWin" name="toWin" placeholder="100" />
+						<label for="toWin"> To win</label>
 					</div>
 					<div class="grid-2">
-						<input type="text" id="player-input"/>
-						<button type="submit" id="player-add" class="btn" />Add Player</button>
+						<input type="text" id="playerInput" />
+						<button type="submit" id="playerAdd" class="btn">Add Player</button>
 					</div>
-					<div class="center">
-						<button id="start-game" class="btn" />Start Game</button>
-					</div>
+					<div class="center"><button id="startGame" class="btn">Start Game</button></div>
 				</form>
 			</section>
-			<section class="right-side"></section>
+			<section id="rightSide" class="right">
+				<dialog id="rules" class="center vertical-center">
+					<form method="dialog">
+						<h1 class="center">Rules</h1>
+						<p>Minimum players 2</p>
+						<h2 class="center">Single die</h2>
+						<ul>
+							<li>The goal of the game is to accumulate 100 points (or more)</li>
+							<li>Player can roll the dice as long as they want, unless</li>
+						</ul>
+						<ol>
+							<li>player throws 1.</li>
+							<li>decides to hold.</li>
+						</ol>
+						<h2 class="center">Two dice</h2>
+						<ul>
+							<li>If both of the dice are the same, their sum is doubled</li>
+							<li>If you throw double 1's you'll earn 25 points</li>
+							<li>If you throw a single 1, your turn ends</li>
+						</ul>
+						<button>Close</button>
+					</form>
+				</dialog>
+			</section>
 		</main>
 		<script src="./script.js"></script>
 	</body>

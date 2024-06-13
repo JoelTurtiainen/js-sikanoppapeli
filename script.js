@@ -67,16 +67,23 @@ class Game {
 
 class GameView {
 	constructor() {
+		this.audio = {
+			shake: new Audio('./audio/dice_shake.ogg'),
+			roll: new Audio('./audio/dice_02.ogg'),
+			woosh: new Audio('./audio/quick_woosh.ogg'),
+		};
 		this.state = 'startScreen';
 	}
 
 	//## Game States
 
 	startScreen() {
-		const diceButtons = document.getElementById('dice-select');
+		const diceButtons = document.getElementById('diceSelect');
+		const toWinInput = document.getElementById('toWin');
 		const diceCount = localStorage.getItem('diceCount');
 		const toWinThreshold = localStorage.getItem('toWin');
-		const toWinInput = document.getElementById('to-win');
+
+		document.getElementById('toWinDisplay').textContent = '';
 
 		if (diceButtons.childNodes.length === 0) this.diceToDom([1, 2], diceButtons, 'select');
 		if (diceCount) diceButtons.children[diceCount - 1].classList.add('active');
@@ -88,10 +95,11 @@ class GameView {
 
 	startGame() {
 		const diceCount = localStorage.getItem('diceCount');
-		const dice = document.getElementById('dice-container');
-		const gameBtns = document.getElementById('game-buttons');
+		const dice = document.getElementById('diceContainer');
+		const gameBtns = document.getElementById('gameButtons');
 		gameBtns.classList.remove('none');
 		dice.textContent = '';
+		document.getElementById('toWinDisplay').textContent = 'To win ' + localStorage.getItem('toWin');
 		this.diceToDom(randomNumber(diceCount), dice);
 		game = createNewGame();
 		game.nextTurn();
@@ -104,7 +112,7 @@ class GameView {
 	gameOver(winner) {
 		this.state = 'gameOver';
 		this.splashText(`${winner} Won!`);
-		document.getElementById('game-buttons').classList.add('none');
+		document.getElementById('gameButtons').classList.add('none');
 		setTimeout(() => {
 			//this.toggleScreen();
 			game = createNewGame();
@@ -115,16 +123,17 @@ class GameView {
 	}
 
 	nextTurnDOM(name, playerData) {
-		const dice = document.getElementById('dice-container');
+		const dice = document.getElementById('diceContainer');
 		const slideIn = document.querySelector('.slidein');
 		this.refreshPlayerList(playerData);
+		this.audio.woosh.play();
 
 		// Replace whole node so animation resets
 		slideIn.innerHTML = `<div class="slidein"><h1>${name}<h1></div>`;
 
 		// Empty Score Queue
-		document.querySelector('.score-queue').textContent = '';
-		document.querySelector('.acc').textContent = '';
+		document.getElementById('scoreQueue').textContent = '';
+		document.getElementById('acc').textContent = '';
 
 		dice.classList.add('transparent');
 
@@ -133,15 +142,17 @@ class GameView {
 
 	//## Dom Manipulation
 
-	onRoll(timer = 1000) {
+	onRoll(timer = 1300) {
 		this.state = 'onRoll';
-		const btns = document.getElementById('game-buttons');
-		const dice = document.getElementById('dice-container');
+		const btns = document.getElementById('gameButtons');
+		const dice = document.getElementById('diceContainer');
 		dice.classList.remove('transparent');
 		btns.classList.add('hidden');
 		dice.childNodes.forEach((i) => i.classList.add('shake'));
+		this.audio.shake.play();
 
 		setTimeout(() => {
+			this.audio.roll.play();
 			const thrown = randomNumber(game.diceCount);
 			const [points, type] = calcScore(thrown);
 
@@ -155,8 +166,8 @@ class GameView {
 	}
 
 	updateQueue(points) {
-		const queue = document.querySelector('.score-queue');
-		const accDisplay = document.querySelector('.acc');
+		const queue = document.getElementById('scoreQueue');
+		const accDisplay = document.getElementById('acc');
 
 		if (points === 0) {
 			queue.textContent = '';
@@ -170,11 +181,11 @@ class GameView {
 
 	toggleScreen() {
 		document.getElementById('back').classList.toggle('hidden');
-		document.getElementById('game-container').classList.toggle('none');
+		document.getElementById('gameContainer').classList.toggle('none');
 		document.getElementById('options').classList.toggle('none');
 	}
 
-	diceToDom(list, destination = document.getElementById('dice-container'), type = '') {
+	diceToDom(list, destination = document.getElementById('diceContainer'), type = '') {
 		list.map((i) => {
 			let dieGrid = createDieGrid(i);
 			if (type === 'double1') dieGrid.classList.add('glow');
@@ -195,7 +206,7 @@ class GameView {
 
 	refreshPlayerList() {
 		const playersFromStorage = getItemsFromStorage('players');
-		const playerList = document.querySelector('.player-list');
+		const playerList = document.getElementById('playerList');
 		playerList.innerHTML = '';
 
 		if (this.state !== 'startScreen') {
@@ -211,7 +222,7 @@ class GameView {
 
 function addPlayerFromInput(e, key = 'players') {
 	e.preventDefault();
-	const input = document.getElementById('player-input');
+	const input = document.getElementById('playerInput');
 	// Sanitize
 	const newName = input.value.replace(/[^a-zA-Z ]/g, '');
 	if (checkIfItemExists('players', newName)) {
@@ -286,7 +297,7 @@ function selectDiceCount(e) {
 
 function onInput(e, key = 'toWin') {
 	const target = e.target;
-	if (target.id === 'to-win') {
+	if (target.id === key) {
 		localStorage.setItem(key, e.target.value);
 	}
 }
@@ -351,7 +362,7 @@ function onClick(e) {
 		view.onRoll();
 	} else if (id === 'hold') {
 		game.nextTurn();
-	} else if (id === 'start-game') {
+	} else if (id === 'startGame') {
 		if (getItemsFromStorage('players').length >= 2 && localStorage.getItem('diceCount')) {
 			view.startGame();
 		}
@@ -361,12 +372,9 @@ function onClick(e) {
 		game = createNewGame();
 		view.startScreen();
 		view.refreshPlayerList();
-	} else if (e.target.parentElement.id === 'dice-select') {
+	} else if (e.target.parentElement.id === 'diceSelect') {
 		selectDiceCount(e);
-	} else if (
-		e.target.parentElement.classList.contains('player-list') &&
-		view.state === 'startScreen'
-	) {
+	} else if (e.target.parentElement.id === 'playerList' && view.state === 'startScreen') {
 		removeItem('players', e.target);
 	}
 }
@@ -379,17 +387,23 @@ function createNewGame() {
 
 	const players = shuffled.map((i) => new Player(i));
 
-	const winThreshold = localStorage.getItem('toWin') || 100;
+	if (localStorage.getItem('toWin') < 100) {
+		localStorage.setItem('toWin', 100);
+	}
 
-	return new Game(players, winThreshold, localStorage.getItem('diceCount'));
+	return new Game(players, localStorage.getItem('toWin'), localStorage.getItem('diceCount'));
 }
 
 function init() {
 	const view = new GameView();
-	const form = document.getElementById('options');
-	document.querySelector('main').addEventListener('click', onClick);
-	form.addEventListener('submit', addPlayerFromInput);
-	form.addEventListener('input', onInput);
+	const body = document.querySelector('body');
+	const options = document.getElementById('options');
+	const rules = document.getElementById('rules');
+	const showRules = document.getElementById('showRules');
+	showRules.addEventListener('click', () => rules.showModal());
+	body.addEventListener('click', onClick);
+	options.addEventListener('submit', addPlayerFromInput);
+	options.addEventListener('input', onInput);
 	view.startScreen();
 	return view;
 }

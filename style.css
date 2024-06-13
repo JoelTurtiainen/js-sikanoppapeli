@@ -8,7 +8,27 @@
 	box-sizing: border-box;
 }
 
+:modal {
+	background-color: #f5f5f5;
+	border: 2px solid #333;
+	border-radius: 5px;
+}
+
+nav {
+	margin: 5px;
+	display: flex;
+	justify-content: space-between;
+}
+
 /* ## General */
+
+.vertical-center {
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+}
 
 h1 {
 	font-size: 2.5em;
@@ -20,10 +40,25 @@ span {
 
 body {
 	font-family: 'JetBrains Mono', monospace;
-	font-optical-sizing: auto;
 	font-style: normal;
 	color: #333;
 	background-color: #f5f5f5;
+}
+
+.left {
+	text-align: start;
+	float: left;
+	margin: 0px 0px;
+}
+
+.right {
+	text-align: end;
+	float: right;
+	margin: 0px 0px;
+}
+
+#playerList {
+	width: clamp(100px, 50vw, 200px);
 }
 
 .center {
@@ -32,7 +67,6 @@ body {
 	text-align: center;
 }
 
-.right-side,
 .score-queue,
 .slidein,
 .shake {
@@ -40,13 +74,13 @@ body {
 }
 
 /* ## Visibility */
-
-.hidden {
+.hidden,
+.none {
 	visibility: hidden;
 }
+
 .none {
 	display: none;
-	visibility: hidden;
 }
 
 .transparent {
@@ -54,15 +88,12 @@ body {
 }
 
 .active {
-	padding: auto;
-	scale: 1.1;
+	padding: 10px;
+	transform: scale(1.1);
 	outline: 5px solid #ffa500;
 }
 
 /* ## Buttons */
-#back {
-	margin: 5px;
-}
 
 button {
 	background-color: #555;
@@ -93,18 +124,14 @@ input[type='number'] {
 	width: 100px;
 }
 
-.score-queue {
+#scoreQueue {
 	height: 20px;
 	padding-left: 10px;
 	text-align: start;
 	bottom: 20%;
 }
 
-.player-list {
-	margin: 50px 5px;
-}
-
-.player-list > li {
+#playerList > li {
 	display: flex;
 	justify-content: space-between;
 	border: 1px solid #ccc;
@@ -115,7 +142,7 @@ input[type='number'] {
 	cursor: pointer;
 }
 
-.player-list > li:hover {
+#playerList > li:hover {
 	border-color: red;
 	color: red;
 }
@@ -126,7 +153,6 @@ input[type='number'] {
 	height: 32px;
 	grid-template-columns: 1fr max-content;
 }
-
 /* ## Dice */
 
 .die {
@@ -158,7 +184,7 @@ input[type='number'] {
 	grid-template-columns: 1fr max-content 1fr;
 }
 
-#dice-select {
+#diceSelect {
 	scale: 0.5;
 }
 
@@ -200,7 +226,7 @@ input[type='number'] {
 	animation: anim-glow 0.5s infinite alternate;
 }
 
-#dice-container div:nth-child(even) {
+#diceContainer div:nth-child(even) {
 	animation-direction: alternate-reverse;
 }
 
@@ -226,44 +252,48 @@ input[type='number'] {
 
 @keyframes anim-splash {
 	0% {
-		scale: 2;
-		rotate: 0;
+		transform: scale(2) rotate(0);
 	}
 	33% {
-		rotate: 5deg;
+		transform: rotate(5deg);
 		filter: blur(1px);
 	}
 	66% {
-		rotate: -5deg;
+		transform: rotate(-5deg);
 	}
 	100% {
-		rotate: 0;
+		transform: rotate(0);
 	}
 }
 
 @keyframes shake {
 	0% {
-		rotate: 0;
+		transform: rotate(0);
 		left: 0px;
 	}
 	33% {
-		rotate: 5deg;
+		transform: rotate(5deg);
 		left: 50px;
 		filter: blur(1px);
 	}
 	66% {
-		rotate: -5deg;
+		transform: rotate(-5deg);
 		left: -50px;
 	}
 	100% {
-		rotate: 0;
+		transform: rotate(0);
 		left: 0px;
 	}
 }
 
 /* ## Responsive */
 @media (max-width: 500px) {
-	.player-list {
+	* {
+		overflow: hidden;
+	}
+
+	#playerList {
+		width: auto;
 		margin: 0;
 		display: flex;
 		flex-wrap: wrap;
